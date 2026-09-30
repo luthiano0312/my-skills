@@ -4,19 +4,19 @@
     {
       "id": 1,
       "prompt": "Planeja o próximo marco deste repositório. Tenho backlog e decisões de arquitetura em docs/, mas não sei ainda quais tasks entram.",
-      "expected_output": "Pede confirmação para iniciar antes de inspecionar o projeto ou escrever arquivos; depois, propõe o recorte do marco e aguarda confirmação, e só salva plano e registro após aprovação explícita da proposta completa.",
+      "expected_output": "Pede confirmação para iniciar antes de inspecionar o projeto ou escrever arquivos; após a confirmação, procura as fontes citadas e pede as que faltarem. Propõe o recorte com base apenas em fontes existentes e não salva plano nem registro sem aprovação explícita da proposta completa.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "Refaz o plano de implementação em skill-plano/plano.md para o primeiro marco do Recolhe. O documento é uma base editável: resolve a dependência entre criar OS na 8.3 e reconciliar containers na 8.5 e organiza as tasks para executar uma por vez.",
-      "expected_output": "Pede confirmação antes de analisar; usa plano.md como rascunho, não como fonte superior; identifica a dependência circular, propõe dividir/reordenar tasks, preserva a raiz de documentação existente e pede aprovação antes de salvar.",
-      "files": ["skill-plano/plano.md"]
+      "prompt": "Tenho um rascunho para o próximo marco: Task A cria uma ordem e, antes de listar recursos disponíveis, executa a reconciliação dos recursos vencidos. Task B, que vem depois, implementa essa reconciliação e a tela de recursos. Quero reorganizar esse rascunho em tasks executáveis, mas não tenho as fontes de requisitos aqui na conversa.",
+      "expected_output": "Pede confirmação antes de analisar; identifica que A depende de parte de B e propõe separar a reconciliação da tela e ordenar as tasks; não inventa requisitos ausentes nem salva plano/registro sem fontes e aprovação explícita.",
+      "files": []
     },
     {
       "id": 3,
-      "prompt": "A Task 8.6 está em correção há três rodadas e continua sem convergir. Os achados de cada revisão estão em docs_sistema_recolhe/execucao/achados/ e o registro aponta para eles. Replaneja esta task sem fechar o marco.",
-      "expected_output": "Pede confirmação inicial, lê somente task/registro/achados persistidos na reespecificação, não reinvestiga diff/código, propõe corrigir o fatiamento in place, preserva IDs e histórico ou marca IDs antigos como substituídos; pede aprovação antes de modificar arquivos.",
+      "prompt": "A task de pagamentos passou por três correções e a quarta revisão ainda encontrou um achado importante. Replaneja essa task sem fechar o marco. O registro e os achados estão em outro repositório; ainda não compartilhei esses arquivos.",
+      "expected_output": "Pede confirmação inicial e os arquivos persistidos necessários (task, registro e achados); não finge ter lido outro repositório nem reinvestiga diff/código. Quando tiver fontes, propõe refatiar in place, preservando IDs/histórico; não grava sem aprovação.",
       "files": []
     }
   ]

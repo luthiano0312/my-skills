@@ -1,113 +1,139 @@
 #!/usr/bin/env python3
+"""Atualiza uma task de um registro já inicializado pela skill plan.
+
+Uso: python update_registro.py <registro.md> <task-id> <status>
+     [--commit HASH] [--obs "motivo ou links"]
+
+A tabela tem seis colunas fixas. Em caso de formato, ID ou transição inválida,
+não modifica o arquivo. `Atualizado em` muda apenas quando o status muda.
 """
-Atualiza (ou cria) a linha de uma task na tabela docs_sistema_recolhe/execucao/registro.md,
-sem arriscar quebrar a formatação markdown ao editar manualmente.
 
-Uso:
-  python3 update_registro.py <caminho_registro.md> <task> <status> [--commit HASH] [--data YYYY-MM-DD] [--obs "texto"]
-
-Exemplos:
-  python3 update_registro.py docs_sistema_recolhe/execucao/registro.md 8.3 "implementação em andamento"
-  python3 update_registro.py docs_sistema_recolhe/execucao/registro.md 8.3 "concluída" --commit a1b2c3d --data 2026-09-29 --obs "-"
-
-Se o arquivo não existir, ele é criado com o cabeçalho padrão.
-Se a task ainda não tem linha, uma linha nova é adicionada.
-Se já tem, a linha é substituída (nunca duplicada).
-Campos não passados mantêm o valor anterior (ou "-" se a linha é nova).
-"""
 import argparse
 import os
+import re
 import sys
+import tempfile
 from datetime import datetime, timezone
+from pathlib import Path
 
-HEADER = (
-    "# Registro de Execução\n\n"
-    "Tabela central de status das tasks do `plano.md`. Cada task tem no máximo uma linha, "
-    "atualizada — nunca duplicada — por `scripts/update_registro.py`.\n\n"
-    "Status possíveis: `implementação em andamento`, `aguardando revisão`, `em correção`, "
-    "`concluída`, `pausada`.\n\n"
-    "| Task | Status | Commit | Data | Observações |\n"
-    "|---|---|---|---|---|\n"
-)
+HEADER = "| Task | Marco | Status | Commit | Atualizado em | Observações |"
+SEPARATOR = "|---|---|---|---|---|---|"
+STATES = {
+    "não iniciada": {"em andamento", "pausada", "substituída"},
+    "em andamento": {"aguardando revisão", "pausada", "substituída"},
+    "aguardando revisão": {"em correção", "concluída", "pausada", "substituída"},
+    "em correção": {"aguardando revisão", "pausada", "substituída"},
+    "pausada": {"em andamento", "aguardando revisão", "em correção", "substituída"},
+    "concluída": set(),
+    "substituída": set(),
+}
 
 
-def parse_table(lines):
-    """Retorna (linhas_antes_da_tabela, header_linhas, dict task->linha_completa, ordem_das_tasks)."""
-    rows = {}
-    order = []
-    table_start = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith("| Task"):
-            table_start = i
+def cells(line):
+    text = line.strip()
+    if not (text.startswith("|") and text.endswith("|")):
+        raise ValueError("linha da tabela malformada")
+    values = [c.strip() for c in text[1:-1].split("|")]
+    if len(values) != 6:
+        raise ValueError("o registro deve ter exatamente seis colunas; não use '|' em Observações")
+    return values
+
+
+def find_task(lines, task_id):
+    indices = [i for i, line in enumerate(lines) if line.strip() == HEADER]
+    if len(indices) != 1:
+        raise ValueError("cabeçalho do registro ausente, duplicado ou incompatível")
+    start = indices[0]
+    if start + 1 >= len(lines) or lines[start + 1].strip() != SEPARATOR:
+        raise ValueError("separador da tabela incompatível")
+
+    found = None
+    seen = set()
+    for i in range(start + 2, len(lines)):
+        if not lines[i].lstrip().startswith("|"):
             break
-    if table_start is None:
-        return lines, [], rows, order
+        row = cells(lines[i])
+        if not row[0] or not row[1]:
+            raise ValueError("Task e Marco são obrigatórios")
+        if row[0] in seen:
+            raise ValueError(f"ID duplicado no registro: {row[0]}")
+        if row[2] not in STATES:
+            raise ValueError(f"status desconhecido em {row[0]}: {row[2]}")
+        try:
+            updated_at = datetime.fromisoformat(row[4])
+        except ValueError as exc:
+            raise ValueError(f"data/hora inválida em {row[0]}") from exc
+        if updated_at.tzinfo is None or updated_at.utcoffset() is None:
+            raise ValueError(f"fuso ausente em Atualizado em da task {row[0]}")
+        seen.add(row[0])
+        if row[0] == task_id:
+            found = (i, row)
+    if found is None:
+        raise ValueError(f"task {task_id} não encontrada; peça à skill plan para inicializar o registro")
+    return found
 
-    pre = lines[: table_start + 2]  # inclui a linha de separador |---|---|
-    for line in lines[table_start + 2 :]:
-        if not line.strip().startswith("|"):
-            continue
-        cols = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cols) < 1 or not cols[0]:
-            continue
-        task_id = cols[0]
-        rows[task_id] = line.rstrip("\n")
-        order.append(task_id)
-    return pre, [], rows, order
 
+def update(path, task_id, status, commit=None, obs=None):
+    if not path.is_file():
+        raise ValueError(f"registro ausente: {path}; a skill implement não cria registros")
+    if status not in STATES:
+        raise ValueError(f"status inválido: {status}")
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    index, row = find_task(lines, task_id)
+    old_status = row[2]
+    if old_status in {"concluída", "substituída"}:
+        raise ValueError(f"task em estado final: {old_status}")
+    if status != old_status and status not in STATES[old_status]:
+        raise ValueError(f"transição inválida: {old_status} → {status}")
+    if status == "concluída":
+        if not commit or not re.fullmatch(r"[0-9a-fA-F]{7,40}", commit):
+            raise ValueError("conclusão exige hash do commit (7 a 40 caracteres hexadecimais)")
+    elif commit is not None:
+        raise ValueError("o hash só pode ser registrado ao concluir a task")
+    if status in {"pausada", "substituída"} and (not obs or obs == "-"):
+        raise ValueError(f"{status} exige motivo/vínculo nas Observações")
+    if old_status == "pausada" and status != old_status and (not obs or obs == "-"):
+        raise ValueError("retomar task pausada exige motivo nas Observações")
+    if obs is not None and ("|" in obs or "\n" in obs or "\r" in obs):
+        raise ValueError("Observações não podem conter '|' nem quebras de linha")
 
-def format_row(task, status, commit, data, obs):
-    return f"| {task} | {status} | {commit} | {data} | {obs} |"
+    row[2] = status
+    if commit is not None:
+        row[3] = commit
+    if status != old_status:
+        row[4] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    if obs is not None:
+        row[5] = obs
+    newline = "\r\n" if lines[index].endswith("\r\n") else "\n"
+    lines[index] = "| " + " | ".join(row) + " |" + newline
+
+    # Só substitui o arquivo depois de todas as validações; preserve notas fora da tabela.
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", newline="", dir=path.parent,
+                                         prefix=".registro-", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+            tmp.writelines(lines)
+        os.replace(tmp_path, path)
+    finally:
+        if tmp_path is not None and tmp_path.exists():
+            tmp_path.unlink()
+    return row
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("registro_path")
-    ap.add_argument("task")
-    ap.add_argument("status")
-    ap.add_argument("--commit", default=None)
-    ap.add_argument("--data", default=None)
-    ap.add_argument("--obs", default=None)
-    args = ap.parse_args()
-
-    path = args.registro_path
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-
-    if not os.path.exists(path):
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(HEADER)
-        pre_lines = HEADER.splitlines(keepends=True)
-    else:
-        with open(path, "r", encoding="utf-8") as f:
-            pre_lines = f.readlines()
-
-    pre, _, rows, order = parse_table(pre_lines)
-
-    existing = rows.get(args.task)
-    if existing:
-        cols = [c.strip() for c in existing.strip().strip("|").split("|")]
-        # cols: [task, status, commit, data, obs]
-        prev_commit = cols[2] if len(cols) > 2 else "-"
-        prev_data = cols[3] if len(cols) > 3 else "-"
-        prev_obs = cols[4] if len(cols) > 4 else "-"
-    else:
-        prev_commit, prev_data, prev_obs = "-", "-", "-"
-        order.append(args.task)
-
-    commit = args.commit if args.commit is not None else prev_commit
-    data = args.data if args.data is not None else (
-        prev_data if existing else datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    )
-    obs = args.obs if args.obs is not None else prev_obs
-
-    rows[args.task] = format_row(args.task, args.status, commit, data, obs)
-
-    with open(path, "w", encoding="utf-8") as f:
-        f.writelines(pre)
-        for task_id in order:
-            f.write(rows[task_id] + "\n")
-
-    print(f"OK: task {args.task} -> status='{args.status}' commit='{commit}' data='{data}' obs='{obs}'")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("registro_path", type=Path)
+    parser.add_argument("task")
+    parser.add_argument("status")
+    parser.add_argument("--commit", default=None)
+    parser.add_argument("--obs", default=None)
+    args = parser.parse_args()
+    try:
+        row = update(args.registro_path, args.task, args.status, args.commit, args.obs)
+    except (ValueError, OSError) as exc:
+        parser.exit(2, f"Erro: {exc}\n")
+    print(f"OK: {row[0]} ({row[1]}) -> {row[2]} em {row[4]}")
 
 
 if __name__ == "__main__":
