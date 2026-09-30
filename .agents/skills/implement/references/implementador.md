@@ -8,7 +8,7 @@ Você está implementando **uma única task** do plano atual apontado no arquivo
 2. Leia integralmente a task no `plano.md`: **Fazer**, **Não alterar**, **Entregáveis**, **Critério de conclusão**, e quaisquer limites globais do plano que se apliquem a todas as tasks.
 3. Leia `AGENTS.md` (ou equivalente) do repositório, se existir.
 4. Inspecione o estado atual do repositório (`git status`, `git diff`) antes de mudar qualquer coisa — não assuma que o repositório está no estado que o plano descreve.
-5. Se esta task já tem histórico de correção, leia os achados em `achados/task-<ID>-revisao-<R>.md`, ao lado do registro. Correções em nova conversa seguem `references/corretor.md`; não reinicie uma task concluída.
+5. Se esta task já tem histórico de correção, leia os achados finalizados em `achados/task-<ID>-revisao-<R>.md`, ao lado do registro. Correções em nova conversa seguem `references/corretor.md`; não reinicie uma task concluída ou substituída. Se nasceu de reespecificação, confira a origem, o reaproveitamento aprovado e o versionamento das evidências no baseline de replanejamento: preserve relatórios/achados antigos com seus IDs, verifique o código existente contra a nova especificação e não herde uma aprovação anterior. Trabalho que não possa ser separado exige alinhamento; não faça rollback automático.
 
 ## Regras enquanto implementa
 
@@ -30,6 +30,6 @@ Se você encontrar uma contradição real entre documentação e repositório (e
 
 1. Execute todos os comandos necessários para comprovar o **Critério de conclusão** — não deixe isso implícito.
 2. Rode os testes diretamente relacionados à task e os gates de qualidade definidos pelas convenções do projeto; não invente gates por etapa.
-3. **Antes de passar para revisão**, escreva `achados/task-<ID>-relatorio.md` ao lado do registro. Registre arquivos alterados, o que foi feito, comandos/testes e resultados, entregáveis/critério de conclusão verificados e pendências. Identifique como **relatório da implementação inicial**, não como aprovação: o revisor ainda vai formar sua própria conclusão. Não dependa da conversa para carregar essas informações.
+3. **Antes de passar para revisão**, escreva `achados/task-<ID>-relatorio.md` ao lado do registro. Registre arquivos alterados, o que foi feito, comandos/testes e resultados, entregáveis/critério de conclusão verificados e pendências. Identifique como **relatório da implementação inicial**, não como aprovação: o revisor ainda vai formar sua própria conclusão. Em task substituta, escreva relatório próprio para o novo ID, com origem, links das evidências anteriores e alterações reaproveitadas/revalidadas; não renomeie nem sobrescreva o relatório antigo. Não dependa da conversa para carregar essas informações.
 4. Só depois de persistir o relatório, atualize o registro com `scripts/update_registro.py` para `aguardando revisão`. Não faça commit; revisão aprovada e autorização do usuário são necessárias.
 5. Informe ao usuário o caminho do relatório, um resumo dos resultados e que a próxima conversa deve ser de revisão. Não volte à conversa do implementador para fechar a task após a aprovação: o revisor registra sua conclusão nos achados, e o relatório inicial permanece como registro do que foi declarado antes da auditoria.

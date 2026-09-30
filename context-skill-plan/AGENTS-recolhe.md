@@ -7,7 +7,7 @@ Sistema de Gestão de Locação de Containers ("Recolhe") para o Venâncio: os c
 
 ## Status
 - Implementação iniciada: scaffold Laravel 13 criado em `src/`; funcionalidades de domínio ainda não implementadas.
-- Próxima etapa: instalar e preparar Breeze, Inertia.js e React conforme `docs_sistema_recolhe/plano.md`.
+- Próxima task: consultar o plano atual e o registro de execução indicados abaixo; não manter uma sequência de implementação duplicada neste arquivo.
 - Meta de primeiro marco: **30/09/2026** (flexível, não é data rígida).
 - Pendência técnica externa: impressora MTP5 aguardando entrega; homologação física ainda pendente.
 
@@ -17,7 +17,10 @@ Sistema de Gestão de Locação de Containers ("Recolhe") para o Venâncio: os c
 - Documentos ativos são fonte de verdade; não use `docs_sistema_recolhe/_archive/` como fonte, apenas como histórico.
 - Documentação, UI, branches e commits em português; identificadores técnicos em inglês. Capitalização segue o ecossistema: banco em `snake_case`, classes/componentes em `PascalCase` e métodos/variáveis em `camelCase`.
 - `main` deve permanecer funcional; mudanças planejadas usam branches curtas e entram por squash com Conventional Commits. Commit direto só para ajuste documental trivial.
-- Antes de editar, verifique branch/status/diff. Com worktree sujo, não troque de branch nem use `stash`; não execute commit, push, merge ou squash sem pedido explícito.
+- Antes de editar, confira branch e status e inspecione as mudanças conforme o papel. Na fase independente do revisor, use `review_inputs.py` da skill `implement` antes de ler diffs/conteúdos; não carregue relatos, achados anteriores ou Observações do registro antecipadamente.
+- Com worktree sujo, não troque de branch nem use `stash`; não execute commit, push, merge ou squash sem pedido explícito. Preserve alterações preexistentes do usuário.
+- A conclusão de uma task exige autorização explícita para os dois commits: funcional e registro. Aprovação técnica não autoriza commits; merge/squash e push exigem autorização própria.
+- Após squash, `Commit` permanece como hash original histórico. Confira a entrega integrada no Git e registre `Integração: <hash-completo>` nas Observações, com commit documental posterior explicitamente autorizado, sem mudar status, hash original ou timestamp. Detalhes nas convenções e no fluxo de desenvolvimento referenciados; se divergirem destas instruções, pare e peça alinhamento.
 - Estratégia de testes: `docs_sistema_recolhe/02-design/estrategia-de-testes.md`.
 
 ## Comandos
@@ -31,6 +34,14 @@ Execute dentro de `src/`:
 - Build frontend: `npm run build`
 
 Fluxo completo: `docs_sistema_recolhe/how-to/fluxo-de-desenvolvimento.md`.
+
+## Planejamento e execução (caminhos previstos — confirmar no projeto real)
+- Plano atual: `docs_sistema_recolhe/plano.md`
+- Registro de execução: `docs_sistema_recolhe/execucao/registro.md`
+- Relatórios e revisões: `docs_sistema_recolhe/execucao/achados/`
+- Planos encerrados: `docs_sistema_recolhe/planos/` — somente consulta histórica, não carregar por padrão.
+
+O plano especifica as tasks; o registro é a fonte de verdade do progresso. Confirme a existência desses arquivos no Recolhe: este mapa não comprova que existam. Se ausentes, a skill `plan` cria plano/registro após aprovação, sem gerar arquivos vazios para satisfazer o mapa, e confirma os caminhos neste arquivo. Antes de iniciar uma nova task, siga a checagem de baseline versionado da skill `implement`.
 
 ## Documentação — onde procurar (tudo sob `docs_sistema_recolhe/`)
 - Escopo (in/out de escopo, restrições): `01-requisitos/escopo.md`

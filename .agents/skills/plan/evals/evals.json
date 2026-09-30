@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "A task de pagamentos passou por três correções e a quarta revisão ainda encontrou um achado importante. Replaneja essa task sem fechar o marco. O registro e os achados estão em outro repositório; ainda não compartilhei esses arquivos.",
-      "expected_output": "Pede confirmação inicial e os arquivos persistidos necessários (task, registro e achados); não finge ter lido outro repositório nem reinvestiga diff/código. Quando tiver fontes, propõe refatiar in place, preservando IDs/histórico; não grava sem aprovação.",
+      "expected_output": "Pede confirmação inicial e os arquivos persistidos necessários (task, registro e achados); não finge ter lido outro repositório nem reinvestiga diff/código. Quando tiver fontes, propõe reespecificar in place no mesmo marco; reinício substancial recebe novos IDs livres, com a antiga substituída, evidências preservadas, reaproveitamento explícito e dependências reconciliadas. Não reseta contagens por mudança cosmética, não grava sem aprovação e exige versionar o replanejamento antes da nova execução.",
       "files": []
     }
   ]

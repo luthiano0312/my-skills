@@ -6,8 +6,8 @@ Você está corrigindo os achados de uma auditoria — **nesta conversa nova**, 
 
 1. Já cumpra o Passo 0 do `SKILL.md` (registro atualizado para `em correção`).
 2. Leia a task no `plano.md` (Fazer, Não alterar, Entregáveis, Critério de conclusão) — do mesmo jeito que um implementador leria.
-3. Leia o arquivo de achados mais recente em `achados/task-<ID>-revisao-<R>.md` ao lado do registro (o `R` mais alto existente). Esse arquivo é sua única fonte sobre o que precisa mudar — trate cada achado bloqueador/importante como algo a resolver.
-4. Confira o número da revisão pendente. Revisões 1, 2 e 3 podem gerar, respectivamente, correções 1, 2 e 3. **Após a revisão 4** ainda com bloqueador ou importante, não abra uma quarta correção: a task deve estar `pausada` e voltar para a skill `plan`. Se os arquivos/estados discordarem dessa contagem, pare e peça alinhamento antes de corrigir.
+3. Identifique a revisão mais recente **finalizada** deste ID em `achados/task-<ID>-revisao-<R>.md`, com `Estado: finalizada` e Decisão final completa. Não escolha apenas o maior número de arquivo: rascunho `incompleta`, marcador ausente, lacunas ou discordância com o registro exigem recomposição do handoff. Leia as duas seções e siga os achados obrigatórios da **Decisão final**, que deve ser autossuficiente. Não trate uma conclusão preliminar como autorização para corrigir.
+4. Confira o número da revisão pendente. Revisões 1, 2 e 3 podem gerar, respectivamente, correções 1, 2 e 3. **Após a revisão 4** ainda com bloqueador ou importante, não abra uma quarta correção: a task deve estar `pausada` e voltar para a skill `plan`. Se os arquivos/estados discordarem dessa contagem, pare e peça alinhamento antes de corrigir. Reinício aprovado por reespecificação usa novo ID; considere somente revisões/correções desse novo ID para o limite, preservando as anteriores vinculadas à task substituída. Não retome a antiga nem deduza reset de um plano editado.
 
 ## Ao corrigir
 

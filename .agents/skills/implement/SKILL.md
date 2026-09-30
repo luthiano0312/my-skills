@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Executa o ciclo implementador→revisor→correção→commit para uma task de um plano.md aprovado (Fazer/Não alterar/Entregáveis/Critério de conclusão) e um registro de execução inicializado. Use quando o usuário pedir para implementar uma task planejada, revisar sua implementação ou corrigir achados, mesmo sem mencionar a skill. Para criar, dividir ou reordenar tasks, use a skill plan; não implemente sem plano e registro válidos.
+description: Executa o ciclo implementador→revisor→correção→commit para uma task de um plano.md aprovado (Fazer/Não alterar/Entregáveis/Critério de conclusão) e um registro de execução inicializado. Use quando o usuário pedir para implementar uma task planejada, revisar sua implementação, corrigir achados, recuperar metadados pendentes ou registrar seu vínculo ao commit integrado, mesmo sem mencionar a skill. Para criar, dividir ou reordenar tasks, use a skill plan; não implemente sem plano e registro válidos.
 ---
 
 # Implementação orientada por plano (ciclo implementador → revisor → correção → commit)
@@ -34,7 +34,7 @@ Leia o mapa de caminhos no `AGENTS.md` ou `CLAUDE.md` **do projeto em execução
     task-<ID>-relatorio.md                 (relatório da task)
 ```
 
-No Recolhe, esses caminhos são `docs_sistema_recolhe/plano.md` e `docs_sistema_recolhe/execucao/registro.md`; num projeto novo com a estrutura padrão, `docs/03-execucao/plano.md` e `docs/03-execucao/registro.md`. **Não crie um registro ausente**: a skill `plan` o inicializa ao aprovar o marco. Confira as seis colunas `Task | Marco | Status | Commit | Atualizado em | Observações` e a linha da task antes de agir. Se registro e plano não concordarem, pare e encaminhe a divergência à `plan`. Atualize o registro com `scripts/update_registro.py`; não altere a tabela à mão. A coluna `Atualizado em` é o instante da última mudança de status em ISO 8601 com fuso explícito, não a data do commit. Antes da **primeira invocação de uma task `não iniciada`**, verifique no Git que o plano aprovado, o registro e o arquivo de entrada que contém o mapa estão rastreados, já commitados e sem mudanças pendentes nesses caminhos (`git ls-files`, `git status --short -- <caminhos>`). Sem esse baseline, peça ao usuário para autorizar/versionar os três arquivos **antes** de implementar. Faça a mesma checagem ao iniciar novas tasks após replanejamento. Não exija registro limpo durante a implementação, revisão ou correção da task em curso: seus estados intermediários ainda aguardam o commit de metadados.
+No Recolhe, esses caminhos são `docs_sistema_recolhe/plano.md` e `docs_sistema_recolhe/execucao/registro.md`; num projeto novo com a estrutura padrão, `docs/03-execucao/plano.md` e `docs/03-execucao/registro.md`. **Não crie um registro ausente**: a skill `plan` o inicializa ao aprovar o marco. Confira as seis colunas `Task | Marco | Status | Commit | Atualizado em | Observações`, nessa ordem, e a linha da task antes de agir. Espaços entre células, três ou mais hífens e alinhamentos `:` no separador são aceitos; nomes, ordem, quantidade de colunas e `|` externos continuam obrigatórios. Se registro e plano não concordarem, pare e encaminhe a divergência à `plan`. Atualize o registro com `scripts/update_registro.py`; não altere a tabela à mão. `Atualizado em` é o instante da última mudança de status em ISO 8601 com fuso explícito, não a data do commit nem da integração. Na primeira fase do revisor, use `scripts/review_inputs.py` para receber apenas metadados do registro e entradas filtradas; não leia Observações nem relatos antecipadamente. Antes da **primeira invocação de uma task `não iniciada`**, verifique no Git que o plano aprovado, o registro e o arquivo de entrada que contém o mapa estão rastreados, já commitados e sem mudanças pendentes nesses caminhos (`git ls-files`, `git status --short -- <caminhos>`). Sem esse baseline, peça ao usuário para autorizar/versionar os três arquivos **antes** de implementar. Faça a mesma checagem ao iniciar novas tasks após replanejamento. Não exija registro limpo durante a implementação, revisão ou correção da task em curso: seus estados intermediários ainda aguardam o commit de metadados.
 
 ## Os três papéis
 
@@ -46,13 +46,14 @@ Você (o usuário) invoca esta skill dizendo qual papel quer rodar, numa convers
 | "revisa/audita a Task X", "faz o code review da Task X" | **Revisor** | `references/revisor.md` |
 | "corrige os achados da Task X", "aplica as correções" | **Corretor** | `references/corretor.md` |
 | "o código já foi commitado; falta registrar a conclusão da Task X" | **Recuperação de metadados** | seção "Recuperação" de `references/revisor.md` |
+| "registra o vínculo das tasks ao commit integrado" | **Metadados de integração** | seção "Vínculo de integração após merge/squash" de `references/revisor.md` |
 
 Leia o arquivo de referência correspondente **antes** de agir — cada um tem o passo a passo completo, incluindo o que escrever em disco ao final. Não improvise um resumo do papel a partir desta tabela.
 
 ## Passo 0 — sempre, antes de qualquer papel
 
-1. Resolva plano e registro pelo arquivo de entrada do projeto. Leia a task e a linha correspondente no registro; confirme que o ID não é `concluída`/`substituída` e que seu estado permite o papel pedido (`não iniciada`/`em andamento` → implementador, início ou continuação; `aguardando revisão` → revisor; `em correção` → corretor). Se estiver `pausada`, peça ao usuário a resolução do bloqueio antes de retomar. Não crie linha para task desconhecida. **Exceção:** no pedido explícito de recuperar um commit de registro pendente, `concluída` localmente não basta para declarar a task finalizada; siga a seção de recuperação do revisor e verifique o Git.
-2. Antes de iniciar uma task `não iniciada`, confirme o commit de baseline descrito acima. Para começar uma task, confirme no registro que **todas as dependências obrigatórias identificadas no plano** estão `concluída` **e que seus commits de metadados já estão no Git**; se alguma estiver ausente, pendente ou substituída sem vínculo resolvido, pare e explique. Etapas são opcionais, não são prova de dependência por si mesmas.
+1. Resolva plano e registro pelo arquivo de entrada do projeto. Leia a task e confira sua linha: o revisor obtém os metadados via `scripts/review_inputs.py`, sem carregar as Observações/relatos nesta fase. Confirme que o ID não é `concluída`/`substituída` e que o estado permite o papel (`não iniciada`/`em andamento` → implementador; `aguardando revisão` → revisor; `em correção` → corretor). Se estiver `pausada`, peça resolução do bloqueio; pausa por limite de correções não admite reset no mesmo ID: a `plan` deve aprovar uma reespecificação substancial e substituí-lo por novo ID. Não crie linha para task desconhecida. **Exceções:** recuperação explícita do commit de registro pendente e vínculo documental pós-integração seguem as seções próprias do revisor; não reabrem a task.
+2. Antes de iniciar uma task `não iniciada`, confirme o baseline. Para começar, todas as dependências obrigatórias devem estar `concluída`, com conclusão versionada e evidência Git. Antes da integração (ou em integração que preserve os commits), confirme o commit funcional e o commit de metadados no histórico da branch usada. Depois de squash/reescrita, confirme o vínculo `Integração: <hash>` versionado, sua ancestralidade e as evidências na entrega integrada, sem exigir os objetos individuais originais. Na fase independente do revisor, confira apenas metadados/presença/ancestralidade; o conteúdo dos relatos fica para a fase 2. Vínculo ausente ou não verificável bloqueia o gate e exige recuperação explícita. Dependência substituída exige reconciliar a referência no plano; não considere a substituição uma entrega concluída. Etapas não provam dependência.
 3. Confira a branch contra as convenções reais do projeto, sem presumir branch por etapa. Se houver descompasso, pergunte antes de continuar; não troque de branch sozinho.
 4. Só depois de todas as verificações o implementador muda `não iniciada` para `em andamento` via `scripts/update_registro.py` (ou mantém `em andamento` se já estava em execução). O corretor mantém `em correção` até devolver para `aguardando revisão`; o revisor mantém `aguardando revisão` até publicar o resultado. Ao bloquear uma task por contradição, marque `pausada` com motivo. Não altere o estado antes de validar o gate.
 
@@ -65,11 +66,11 @@ Implementador (conversa nova)
     ou contradição documento↔repositório → PARA e reporta, não decide sozinho
         ↓
 Revisor (conversa nova, sem herdar o contexto do implementador)
-  → lê a task + o git diff PRIMEIRO, forma opinião própria
-  → só depois lê o relatório do implementador, compara
-  → checklist obrigatório item a item contra "Não alterar"
-  → classifica achados: bloqueador / importante / melhoria opcional
-  → persiste o relatório de achados completo em disco
+  → na MESMA conversa: task + entradas filtradas por review_inputs.py
+  → checklist item a item contra "Não alterar" e classificação dos achados
+  → persiste avaliação independente (revisão ainda incompleta)
+  → só depois lê relatos/achados anteriores e compara
+  → persiste decisão final e marca a revisão como finalizada
         ↓
    zerou bloqueador E importante? ──não──→ Corretor (conversa nova, cega,
         │                                    recebe task + arquivo de achados)
@@ -82,14 +83,15 @@ Revisor (conversa nova, sem herdar o contexto do implementador)
    → squash, se adotado, é posterior
 ```
 
-Antes de qualquer commit, siga a regra do arquivo de entrada do projeto: aprovação técnica da revisão não é autorização. O revisor só inicia **os dois commits** após pedido explícito que os inclua (ex.: "revise e, se passar, faça os commits da task e do registro"). Pedido de "commit" ambíguo não autoriza o segundo: confirme o alcance. Sem autorização, informe que a revisão passou e aguarde. O campo `Commit` guarda o hash do **primeiro commit**, não do commit de metadados. Atualize para `concluída` após o primeiro commit, mas só declare a task concluída e libere a próxima quando o commit de metadados tiver sido confirmado. Se o segundo falhar, não refaça o primeiro: preserve o hash e oriente recuperação do registro pendente.
+Antes de qualquer commit, siga a regra do arquivo de entrada do projeto: aprovação técnica da revisão não é autorização. O revisor só inicia **os dois commits** após pedido explícito que os inclua (ex.: "revise e, se passar, faça os commits da task e do registro"). Pedido de "commit" ambíguo não autoriza o segundo: confirme o alcance. Sem autorização, informe que a revisão passou e aguarde. O campo `Commit` guarda o hash do **primeiro commit**, não do commit de metadados. Após squash/reescrita, ele permanece histórico, sem promessa de disponibilidade; Observações recebe `Integração: <hash-completo>` em atualização documental posterior, explicitamente autorizada (ver seção própria do revisor). A garantia pós-integração é consultar a entrega integrada e os relatos versionados, não recuperar o diff individual original. Essa operação usa `--integration`, sem alterar status, hash original ou timestamp; não autoriza reabrir estados finais. Atualize para `concluída` após o primeiro commit, mas só declare a task concluída e libere a próxima quando o commit de metadados tiver sido confirmado. Se o segundo falhar, não refaça o primeiro: preserve o hash e oriente recuperação do registro pendente.
 
-Depois de **3 correções completas**, se a reauditoria seguinte ainda encontrar bloqueadores ou importantes, pause a task e encaminhe à `plan`; não abra uma quarta correção. São até 3 correções e até 4 revisões (a inicial mais uma após cada correção). Isso pode indicar problema na especificação, sem provar que todo achado veio dela. Reporte ao usuário e recomende levar a task de volta para a skill de planejamento, em vez de insistir numa quarta correção.
+Depois de **3 correções completas**, se a reauditoria seguinte ainda encontrar bloqueadores ou importantes, pause a task e encaminhe à `plan`; não abra uma quarta correção. São até 3 correções e até 4 revisões (a inicial mais uma após cada correção). Isso pode indicar problema na especificação, sem provar que todo achado veio dela. Reporte ao usuário e encaminhe à `plan`. Se uma reespecificação substancial aprovada justificar novo ciclo, a antiga fica `substituída`, a nova recebe ID livre e relatório/revisões próprios. Preserve as evidências e explicite o reaproveitamento, sem rollback automático ou aprovação herdada. Mudança cosmética não reseta o limite; a nova execução começa em conversa nova após versionar o replanejamento.
 
 ## Referências
 
 - `references/implementador.md` — passo a passo completo do papel de implementador, incluindo os freios de escopo e o formato do relatório final
-- `references/revisor.md` — passo a passo completo do papel de revisor, incluindo a ordem obrigatória de leitura (diff antes do relatório) e o formato do arquivo de achados
+- `references/revisor.md` — duas fases na mesma conversa, avaliação independente persistida, decisão final, commits e vínculo pós-integração
 - `references/corretor.md` — passo a passo completo do papel de corretor, incluindo a contagem de rodadas e quando escalar
 - `assets/registro-template.md` — contrato do registro criado pela skill `plan`; não o crie nesta skill
-- `scripts/update_registro.py` — valida o formato e as transições e atualiza uma linha já criada pela `plan`; nunca cria o registro nem novas tasks
+- `scripts/update_registro.py` — valida formato/transições e atualiza uma linha criada pela `plan`; `--integration` só acrescenta vínculo confirmado a task concluída; nunca cria registro/tasks
+- `scripts/review_inputs.py` — leitura inicial filtrada para o revisor: metadados, inventário, diffs, arquivos novos e snapshot; não revisa nem modifica o Git
