@@ -1,0 +1,4 @@
+{"type":"session","version":3,"id":"teste-sem-relevancia","timestamp":"2026-01-01T10:00:00Z","synthetic":true}
+{"type":"message","id":"s1","parentId":null,"timestamp":"2026-01-01T10:00:01Z","message":{"role":"system","content":[{"type":"text","text":"Fixture sintética. Skills disponíveis: plan e implement. A disponibilidade não significa invocação."}]}}
+{"type":"message","id":"u1","parentId":"s1","timestamp":"2026-01-01T10:00:02Z","message":{"role":"user","content":[{"type":"text","text":"Qual a diferença entre cinza claro e cinza escuro num tema do terminal? Só quero uma explicação visual, sem mudar nada."}]}}
+{"type":"message","id":"a1","parentId":"u1","timestamp":"2026-01-01T10:00:08Z","message":{"role":"assistant","content":[{"type":"text","text":"Cinza claro tem maior luminosidade; cinza escuro, menor. A legibilidade depende do contraste entre o texto e o fundo."}],"model":"modelo-sintetico","responseId":"resp-teste-sem-relevancia"}}

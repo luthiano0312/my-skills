@@ -1,0 +1,71 @@
+{
+  "extraction_model_version": "1.0.0",
+  "extracted_at": null,
+  "session_id": null,
+  "source": {
+    "path": null,
+    "sha256": null,
+    "bytes": null,
+    "final_check": {
+      "checked_at": null,
+      "sha256": null,
+      "matches_snapshot": null
+    }
+  },
+  "previous_analysis": null,
+  "processing": null,
+  "relevance": null,
+  "target_skills": ["plan", "implement"],
+  "observed_skills": null,
+  "tasks": null,
+  "outcomes": {
+    "local_delivery": null,
+    "full_cycle": null,
+    "evidence": null
+  },
+  "coverage": {
+    "events_total": null,
+    "events_read": null,
+    "parse_errors": null,
+    "trajectory": null,
+    "branch_points": null,
+    "compactions": null,
+    "selected_responses": null,
+    "responses_with_usage": null,
+    "responses_missing_usage": null,
+    "duplicates": null,
+    "limitations": null
+  },
+  "responses": null,
+  "usage_summary": {
+    "reported_field_sums": null,
+    "interpreted_consumption": null,
+    "semantics_status": "unconfirmed",
+    "method": null,
+    "limitations": null
+  },
+  "cost": {
+    "status": null,
+    "reported_field_sums": null,
+    "currency": null,
+    "pricing_source": null,
+    "method": null,
+    "limitations": null
+  },
+  "time": {
+    "timestamp_semantics": null,
+    "intervals": null,
+    "user_response_wait": {
+      "observed_requests": null,
+      "seconds": null,
+      "limitations": null
+    },
+    "active_seconds": null,
+    "reported_tool_durations": null,
+    "method": null,
+    "limitations": null
+  },
+  "historical_instructions": null,
+  "auxiliaries": null,
+  "limitations": null
+}
